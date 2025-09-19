@@ -1,50 +1,94 @@
-import streamlit as st
+import os
+import sys
 import json
 import asyncio
 import logging
 import platform
-import sys
 import subprocess
-import os
 import pandas as pd
 from issue_scraper import scrape_issuu_results
 
-# Function to install Playwright and its dependencies
+# Set environment variable to disable file watcher
+os.environ["STREAMLIT_SERVER_FILE_WATCHER_TYPE"] = "none"
+
+# Configure logging for Streamlit
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
 def install_playwright():
+    """Install Playwright and its dependencies."""
     try:
         # Check if Playwright is already installed
         import playwright
         logger.info("Playwright is already installed")
+        return True
     except ImportError:
         logger.info("Playwright not found. Installing...")
-        status_text = st.sidebar.info(" Installing Playwright and its dependencies...")
+        
+        # Create a placeholder in the sidebar
+        status_placeholder = st.sidebar.empty()
+        status_placeholder.info(" Installing Playwright and its dependencies...")
         
         try:
             # Install Playwright package
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "playwright==1.48.0"])
+            logger.info("Installing Playwright package...")
+            subprocess.check_call([
+                sys.executable, "-m", "pip", "install", 
+                "playwright==1.48.0",
+                "playwright-stealth==1.0.6"
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             
             # Install browsers
-            subprocess.check_call([sys.executable, "-m", "playwright", "install"])
-            subprocess.check_call([sys.executable, "-m", "playwright", "install-deps"])
+            logger.info("Installing Playwright browsers...")
+            subprocess.check_call([
+                sys.executable, "-m", "playwright", 
+                "install", "chromium"
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             
-            status_text.success(" Playwright installed successfully!")
-            logger.info("Playwright installed successfully")
+            # Install system dependencies (only on Linux)
+            if platform.system() == 'Linux':
+                logger.info("Installing system dependencies...")
+                subprocess.check_call([
+                    sys.executable, "-m", "playwright", 
+                    "install-deps"
+                ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            
+            logger.info("Playwright installation completed successfully")
+            status_placeholder.success(" Playwright installed successfully!")
             return True
             
         except subprocess.CalledProcessError as e:
-            status_text.error(f" Error installing Playwright: {e}")
-            logger.error(f"Error installing Playwright: {e}")
+            error_msg = f"Failed to install Playwright. Error: {e.stderr.decode() if e.stderr else str(e)}"
+            logger.error(error_msg)
+            status_placeholder.error(f" Error installing Playwright: {error_msg}")
             return False
         except Exception as e:
-            status_text.error(f" Unexpected error: {str(e)}")
-            logger.error(f"Unexpected error: {str(e)}")
+            error_msg = f"Unexpected error during installation: {str(e)}"
+            logger.error(error_msg)
+            status_placeholder.error(f" Unexpected error: {error_msg}")
             return False
-    return True
 
-# Install Playwright when the app starts
-if not install_playwright():
-    st.error("Failed to install required dependencies. Please check the logs and try again.")
-    st.stop()
+# Set page config early to avoid rendering issues
+st.set_page_config(
+    page_title="Issuu Scraper",
+    page_icon="",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Show loading message
+with st.spinner("Initializing application..."):
+    # Install Playwright when the app starts
+    if not install_playwright():
+        st.error("❌ Failed to install required dependencies. Please check the logs and try again.")
+        st.stop()
+
+# Now that we have all dependencies, import Playwright
+import playwright
 
 # Configure logging for Streamlit
 logging.basicConfig(
