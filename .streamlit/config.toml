@@ -2,15 +2,14 @@
 headless = true
 port = 8501
 enableCORS = false
+enableXsrfProtection = false
+enableWebsocketCompression = false
 
 [browser]
 serverAddress = ""
 
 [runner]
 magicEnabled = false
-
-[scheduler]
-userCaching = true
 
 [client]
 showErrorDetails = false
