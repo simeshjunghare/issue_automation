@@ -5,7 +5,17 @@ from playwright.async_api import async_playwright
 import asyncio
 import sys
 import platform
+import os
 from difflib import SequenceMatcher
+
+# Ensure Playwright browsers are installed
+try:
+    from playwright.__main__ import install as install_playwright
+    install_playwright()
+    os.system('playwright install-deps')
+    os.system('playwright install')
+except ImportError:
+    pass
 
 # Configure logging
 logging.basicConfig(
@@ -36,7 +46,29 @@ async def scrape_issuu_results(company_name):
             # Launch browser
             logger.info("Attempting to launch Chromium browser (headless=False)")
             try:
-                browser = await p.chromium.launch(headless=True)  # Keep headless=False for debugging
+                # Try to get the browser executable path from environment variable
+                browser_executable_path = os.environ.get('PLAYWRIGHT_BROWSERS_PATH')
+                
+                # Set launch options
+                launch_options = {
+                    'headless': True,
+                    'args': [
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-accelerated-2d-canvas',
+                        '--no-first-run',
+                        '--no-zygote',
+                        '--single-process',
+                        '--disable-gpu'
+                    ]
+                }
+                
+                # Add executable path if available
+                if browser_executable_path:
+                    launch_options['executable_path'] = browser_executable_path
+                
+                browser = await p.chromium.launch(**launch_options)
             except Exception as e:
                 logger.error(f"Failed to launch browser: {str(e)}")
                 raise
