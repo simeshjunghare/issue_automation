@@ -7,7 +7,6 @@ import platform
 import subprocess
 import pandas as pd
 import streamlit as st
-from issue_scraper import scrape_issuu_results
 
 # Set environment variable to disable file watcher
 os.environ["STREAMLIT_SERVER_FILE_WATCHER_TYPE"] = "none"
@@ -19,6 +18,17 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+
+# Set page config as the first Streamlit command
+st.set_page_config(
+    page_title="Issuu Scraper",
+    page_icon="📄",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Now import other modules that might use Streamlit
+from issue_scraper import scrape_issuu_results
 
 def install_playwright():
     """Install Playwright and its dependencies."""
@@ -73,14 +83,6 @@ def install_playwright():
             status_placeholder.error(f" Unexpected error: {error_msg}")
             return False
 
-# Set page config early to avoid rendering issues
-st.set_page_config(
-    page_title="Issuu Scraper",
-    page_icon="📄",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 # Show loading message
 with st.spinner("Initializing application..."):
     # Install Playwright when the app starts
@@ -95,9 +97,6 @@ import playwright
 if platform.system() == "Windows":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
     logger.info("Applied WindowsProactorEventLoopPolicy for asyncio compatibility")
-
-# Streamlit app configuration
-st.set_page_config(page_title="Issuu Scraper", page_icon="📄", layout="wide")
 
 # Title and description
 st.title("Issuu Publication Scraper")
