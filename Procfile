@@ -1,1 +1,1 @@
-web: sh setup.sh && streamlit run streamlit_app.py --server.port=$PORT
+web: chmod +x setup.sh && ./setup.sh && streamlit run streamlit_app.py --server.port=$PORT --server.address=0.0.0.0
