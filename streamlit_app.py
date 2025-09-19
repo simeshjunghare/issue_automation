@@ -6,6 +6,7 @@ import logging
 import platform
 import subprocess
 import pandas as pd
+import streamlit as st
 from issue_scraper import scrape_issuu_results
 
 # Set environment variable to disable file watcher
@@ -75,7 +76,7 @@ def install_playwright():
 # Set page config early to avoid rendering issues
 st.set_page_config(
     page_title="Issuu Scraper",
-    page_icon="",
+    page_icon="📄",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -89,14 +90,6 @@ with st.spinner("Initializing application..."):
 
 # Now that we have all dependencies, import Playwright
 import playwright
-
-# Configure logging for Streamlit
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
 
 # Set WindowsProactorEventLoopPolicy for Windows
 if platform.system() == "Windows":
