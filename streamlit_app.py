@@ -3,8 +3,48 @@ import json
 import asyncio
 import logging
 import platform
+import sys
+import subprocess
+import os
 import pandas as pd
 from issue_scraper import scrape_issuu_results
+
+# Function to install Playwright and its dependencies
+def install_playwright():
+    try:
+        # Check if Playwright is already installed
+        import playwright
+        logger.info("Playwright is already installed")
+    except ImportError:
+        logger.info("Playwright not found. Installing...")
+        status_text = st.sidebar.info(" Installing Playwright and its dependencies...")
+        
+        try:
+            # Install Playwright package
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "playwright==1.48.0"])
+            
+            # Install browsers
+            subprocess.check_call([sys.executable, "-m", "playwright", "install"])
+            subprocess.check_call([sys.executable, "-m", "playwright", "install-deps"])
+            
+            status_text.success(" Playwright installed successfully!")
+            logger.info("Playwright installed successfully")
+            return True
+            
+        except subprocess.CalledProcessError as e:
+            status_text.error(f" Error installing Playwright: {e}")
+            logger.error(f"Error installing Playwright: {e}")
+            return False
+        except Exception as e:
+            status_text.error(f" Unexpected error: {str(e)}")
+            logger.error(f"Unexpected error: {str(e)}")
+            return False
+    return True
+
+# Install Playwright when the app starts
+if not install_playwright():
+    st.error("Failed to install required dependencies. Please check the logs and try again.")
+    st.stop()
 
 # Configure logging for Streamlit
 logging.basicConfig(
